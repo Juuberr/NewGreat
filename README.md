@@ -1,1 +1,1 @@
-# NewGreat
+GReaT Generator
