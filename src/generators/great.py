@@ -94,6 +94,24 @@ def generate(X_raw, y_raw, train_index, X_train_cols, seed, **kwargs):
 
     synthetic[target_col] = synthetic[target_col].astype(str).str.strip()
 
+    # ─── NEU: ungültige Zielwerte rausfiltern ──────────────────────
+    valid_labels = set(le.classes_)
+    mask_valid = synthetic[target_col].isin(valid_labels)
+    n_invalid = int((~mask_valid).sum())
+
+    if n_invalid > 0:
+        print(f"   ⚠  GReaT: {n_invalid} Zeile(n) mit ungültigem Zielwert verworfen "
+              f"({synthetic.loc[~mask_valid, target_col].unique().tolist()})")
+        synthetic = synthetic[mask_valid]
+
+    if len(synthetic) == 0:
+        print("GReaT: keine gültigen Zielwerte → fallback auf Trainingsdaten")
+        synthetic = train_data.sample(n=min(200, len(train_data)), random_state=seed)
+        synthetic[target_col] = synthetic[target_col].astype(str).str.strip()
+    # ────────────────────────────────────────────────────────────
+
+    
+
     y_synth = le.transform(synthetic[target_col])
 
     X_synth_raw = synthetic.drop(columns=[target_col])
